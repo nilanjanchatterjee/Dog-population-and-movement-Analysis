@@ -1,0 +1,59 @@
+---
+title: "Tutorial for population estimation using RMark"
+format: html
+editor: visual
+author: Nilanjan Chatterjee, V K Sanjana
+date: Sys.time()
+---
+
+## Background
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Preamble
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+library(RMark)
+library(tidyverse)
+```
+
+You can add options to executable code like this
+
+```{r}
+dog_pop <- read.csv("C:/Users/nchatterjee/Downloads/dog population/MARK_INPUT_updated.csv")
+head(dog_pop)
+class(dog_pop$ch)<- "character"
+table(nchar(dog_pop$ch)) ### check if all rows have four capture or not
+##add 0's in front if there are not four captures
+dog_pop$ch <- sprintf("%-4s", dog_pop$ch)
+dog_pop$ch <- gsub(" ", "0", dog_pop$ch)
+```
+
+
+```{r}
+# Convert to RMark format
+processed_data <- process.data(dog_pop, model = "Closed")
+# Define model design
+design_data <- make.design.data(processed_data)
+
+# Fit closed capture models
+closed_model <- mark(processed_data, design_data,
+                     model = "Closed", model.parameters = list(
+                       p = list(formula = ~village), # Constant capture probability
+                       c = list(formula = ~1) # Constant recapture probability
+                       #pi = list(formula = ~1) #Proportion of individuals in each mixture
+                     ))
+
+# Summarize results
+summary(closed_model)
+population_estimate <- closed_model$results$derived
+print(population_estimate) # Estimated population size
+```
+
+
+```{r}
+```
+
+
